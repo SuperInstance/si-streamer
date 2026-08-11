@@ -1,0 +1,102 @@
+# LucidDreamer.AI — Streaming Audio Muxer Configuration
+# ZeroClaw's first build. The transmitter.
+#
+# "A 24/7 stream is a days-long Markov chain in latent space.
+#  Temporal coherence drift is the systemic risk." — Nemotron
+#
+# The muxer is the radio station's transmitter. It takes audio files
+# and creates a continuous stream with crossfades, normalization,
+# and time-aware scheduling.
+
+# Audio source — local directory of MP3 files
+audio_dir: /home/eileen/projects/ai-writings/radio-theater/channel-42-dawn
+
+# HLS output directory (segments + playlist)
+output_dir: /home/eileen/projects/luciddreamer-prototype/streamer/output
+
+# Crossfade settings
+crossfade:
+  duration_seconds: 3.0        # overlap between tracks
+  fade_out_curve: linear       # linear | exponential | logarithmic
+  fade_in_curve: linear
+
+# Silence between segments (seconds). 0 = seamless, positive = gap
+inter_segment_silence: 1.0
+
+# Loudness normalization (LUFS target, broadcast standard = -23)
+normalization:
+  enabled: true
+  target_lufs: -23.0
+
+# HLS segment settings
+hls:
+  segment_duration_seconds: 10   # each HLS segment length
+  playlist_entries: 15           # rolling window in .m3u8
+
+# Stream server
+server:
+  host: 0.0.0.0
+  port: 8420                     # LucidDreamer's frequency
+  max_listeners: 50
+
+# Schedule — what plays when
+# Times are in the station's local timezone (America/Anchorage)
+schedule:
+  slots:
+    - name: "Morning Watch"
+      start_hour: 6
+      end_hour: 10
+      mood: [energizing, dawn, announcement, warm]
+      min_quality: 0.3
+      max_duration_seconds: 600
+      description: "Fleet Radio morning show, dawn broadcasts, energizing pieces"
+
+    - name: "Midday Essays"
+      start_hour: 10
+      end_hour: 14
+      mood: [essay, interview, educational, thoughtful]
+      min_quality: 0.4
+      max_duration_seconds: 1800
+      description: "Essays, interviews, longer pieces"
+
+    - name: "Afternoon Theater"
+      start_hour: 14
+      end_hour: 18
+      mood: [drama, creative, experimental, playful]
+      min_quality: 0.3
+      max_duration_seconds: 1200
+      description: "Radio theater, creative pieces, remix table sessions"
+
+    - name: "Evening Tap"
+      start_hour: 18
+      end_hour: 22
+      mood: [live, conversational, open_mic, warm]
+      min_quality: 0.4
+      max_duration_seconds: 1800
+      description: "Tap sessions, open mic, live-feel content"
+
+    - name: "Overnight Dispatch"
+      start_hour: 22
+      end_hour: 6
+      mood: [ambient, quiet, meditative, music_heavy]
+      min_quality: 0.2
+      max_duration_seconds: 2400
+      description: "Ambient, music-heavy, quiet pieces, overnight dispatch"
+
+# Playlist rotation rules
+playlist:
+  no_repeat_window_minutes: 240   # don't replay within 4 hours
+  min_queue_size: 3                # always have at least 3 tracks queued
+  max_queue_size: 10               # don't over-prepare
+  weight_by_quality: true          # higher quality = more plays
+  weight_by_recency: true          # newer content gets a boost
+  recency_boost_multiplier: 1.5
+
+# Coherence anchor — guards against Nemotron's temporal drift warning.
+# Every N tracks, force a high-quality "anchor" piece to reset context.
+coherence:
+  anchor_interval_tracks: 8       # every 8th track, insert an anchor
+  anchor_min_quality: 0.8         # anchor pieces must be high quality
+  description: |
+    Prevents the stream from drifting into a fixed-point attractor.
+    The dream that forgot it was dreaming. We anchor.
